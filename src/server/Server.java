@@ -28,6 +28,10 @@ public class Server implements Runnable {
 	private DatagramSocket serverSocket;
 	
 	public Server() {/*empty constructor*/}
+	
+	public static void main(String[] args) {
+		new Server().start();
+	}
 		
 	public void init() {
 		/*Loading a default config*/
