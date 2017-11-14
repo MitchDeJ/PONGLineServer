@@ -21,6 +21,7 @@ public class PacketParser {
 		String message = new String(data).trim();
 		PacketTypes type = Packet.lookupPacket(message.substring(0, 2));
 		Packet packet;
+		server.log(message);
 
 		switch (type) {
 		
@@ -30,6 +31,17 @@ public class PacketParser {
 					parseIndex(message, 1), 
 					parseIndex(message, 2) 
 					);
+			break;
+			
+		case LOGIN:
+			if (server.getAuth().login(
+					parseIndex(message, 0), 
+					parseIndex(message, 1)
+					)) {
+				//accepted, entered correct details
+			} else {
+				//declined, entered wrong password
+			}
 			break;
 		
 		case INVALID:
