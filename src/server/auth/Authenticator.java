@@ -1,5 +1,8 @@
 package server.auth;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import server.Server;
 import server.auth.bcrypt.BCrypt;
 import server.sql.ResultList;
@@ -10,14 +13,17 @@ public class Authenticator {
 	private Server server;
 	private SQLManager sql;
 	
+	private static final Pattern VALID_EMAIL_ADDRESS_REGEX = 
+		    Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+	
 	public Authenticator(Server server) {
 		this.server = server;
 		this.sql = server.getSQLManager();
 	}
 	
-	public boolean login(String username, String password) {
+	public int login(String username, String password) {
 		if (!userExists(username))
-			return false;
+			return -1;
 		
 		ResultList results =
 				sql.getQueryResult("SELECT * FROM users WHERE username = '"+username+"'");
@@ -25,27 +31,62 @@ public class Authenticator {
 		String hash = results.get(0).get("password").getString();
 		
 		if (BCrypt.checkpw(password, hash)) {
-			return true;
+			return 1;
 		}
 		
-		return false;
+		return 0;
 	}
 	
-	public void register(String username, String password, String email) {
-		if (userExists(username))
-			return;
+	public int register(String email, String username, String password, String confirm) {
+		if (userExists(username)) {
+			server.log("Username already used.");
+			return 0;
+		}
+		
+		if (emailUsed(email)) {
+			server.log("Email already used.");
+			return 2;
+		}
+		
+		if (!validateEmail(email)) {
+			server.log("Invalid email adress.");
+			return 3;
+		}
+		
+		if (!password.equals(confirm)) {
+			server.log(password);
+			server.log(confirm);
+			server.log("Passwords dont match");
+			return 4;
+		}
 		
 		String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
 		
 		sql.insert("users", "0, '"+username+"', '"+hashed+"', '"+email+"'");
 		server.log("Successfully registered "+username+".");
+		return 1;
 	}
 	
 	public boolean userExists(String username) {
-		ResultList results =
+				try {
+					ResultList results =
 				sql.getQueryResult("SELECT * FROM users WHERE username = '"+username+"'");
+					return results.size() > 0;	
+				} catch(NullPointerException e) {
+					return false;
+				}
+	}
+	
+	public boolean emailUsed(String email) {
+		ResultList results =
+				sql.getQueryResult("SELECT * FROM users WHERE email = '"+email+"'");
 		
 		return results.size() > 0;		
+	}
+	
+	public boolean validateEmail(String email) {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX .matcher(email);
+        return matcher.find();	
 	}
 
 }

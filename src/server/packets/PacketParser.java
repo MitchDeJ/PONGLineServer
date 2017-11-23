@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import server.Server;
 import server.packets.types.Packet;
 import server.packets.types.Packet.PacketTypes;
+import server.packets.types.Packet00RegisterStatus;
+import server.packets.types.Packet01LoginStatus;
 
 public class PacketParser {
 
@@ -21,33 +23,48 @@ public class PacketParser {
 		String message = new String(data).trim();
 		PacketTypes type = Packet.lookupPacket(message.substring(0, 2));
 		Packet packet;
-		server.log(message);
+		int status;
+		//server.log(message);
 
 		switch (type) {
 		
 		case REGISTER:
-			server.getAuth().register(
+			status = server.getAuth().register(
 					parseIndex(message, 0), 
 					parseIndex(message, 1), 
-					parseIndex(message, 2) 
+					parseIndex(message, 2),
+					parseIndex(message, 3)
 					);
+		
+			if (status == 1) {
+			//accepted, registered
+			} else {
+			//declined, there was an error
+			}
+			
+			//tell the user about his register status
+			packet = new Packet00RegisterStatus(status);
+			packet.sendData(server, address, port);
 			break;
 			
 		case LOGIN:
-			if (server.getAuth().login(
-					parseIndex(message, 0), 
-					parseIndex(message, 1)
-					)) {
-				//accepted, entered correct details
+			status = server.getAuth().login(parseIndex(message, 0), parseIndex(message, 1));
+			
+			if (status == 1) {
+			//accepted, entered correct details
 			} else {
-				//declined, entered wrong password
+			//declined, entered wrong password
 			}
+			
+			//tell the user about his login status
+			packet = new Packet01LoginStatus(status);
+			packet.sendData(server, address, port);
 			break;
 		
 		case INVALID:
 			server.log("Received an invalid packet!");
 			break;
-			
+
 		default:
 			server.log("Received unhandled packet!");
 			break;
