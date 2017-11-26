@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 
 import server.Server;
+import server.model.Player;
 import server.packets.types.Packet;
 import server.packets.types.Packet.PacketTypes;
 import server.packets.types.Packet00RegisterStatus;
@@ -30,10 +31,10 @@ public class PacketParser {
 		
 		case REGISTER:
 			status = server.getAuth().register(
-					parseIndex(message, 0), 
-					parseIndex(message, 1), 
-					parseIndex(message, 2),
-					parseIndex(message, 3)
+					parseIndex(message, 0), //email
+					parseIndex(message, 1), //username
+					parseIndex(message, 2), //password
+					parseIndex(message, 3) //confirm password
 					);
 		
 			if (status == 1) {
@@ -52,6 +53,12 @@ public class PacketParser {
 			
 			if (status == 1) {
 			//accepted, entered correct details
+				//adding the player to the player list
+				server.getPlayers().add(new Player(
+						parseIndex(message, 0), //player name
+						address, //player ip address
+						port //player port
+						));
 			} else {
 			//declined, entered wrong password
 			}
@@ -59,6 +66,13 @@ public class PacketParser {
 			//tell the user about his login status
 			packet = new Packet01LoginStatus(status);
 			packet.sendData(server, address, port);
+			break;
+			
+		case QUIT:
+			Player quitter = server.getPlayerByConnection(address, port);
+			if (quitter == null)
+				return;
+			server.getPlayers().remove(quitter);
 			break;
 		
 		case INVALID:

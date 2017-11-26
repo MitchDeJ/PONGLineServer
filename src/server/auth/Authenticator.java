@@ -25,6 +25,11 @@ public class Authenticator {
 		if (!userExists(username))
 			return -1;
 		
+		if (server.getPlayers().isOnline(username)) {
+			server.log(username+" is already logged in.");
+			return 2;
+		}
+		
 		ResultList results =
 				sql.getQueryResult("SELECT * FROM users WHERE username = '"+username+"'");
 		
@@ -37,7 +42,7 @@ public class Authenticator {
 		return 0;
 	}
 	
-	public int register(String email, String username, String password, String confirm) {
+	public int register(String email, String username, String password, String confirm) {		
 		if (userExists(username)) {
 			server.log("Username already used.");
 			return 0;
@@ -51,6 +56,18 @@ public class Authenticator {
 		if (!validateEmail(email)) {
 			server.log("Invalid email adress.");
 			return 3;
+		}
+		
+		String[] vars = new String[] 
+				{
+					username,
+					password,
+					confirm
+				};
+		
+		if (!validateString(vars)) {
+			server.log("Invalid chars.");
+			return 5;
 		}
 		
 		if (!password.equals(confirm)) {
@@ -87,6 +104,15 @@ public class Authenticator {
 	public boolean validateEmail(String email) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX .matcher(email);
         return matcher.find();	
+	}
+	
+	public boolean validateString(String[] args) {
+		for(int i = 0; i < args.length; i++) {
+			if (!args[i].matches("[a-zA-Z0-9]*")) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

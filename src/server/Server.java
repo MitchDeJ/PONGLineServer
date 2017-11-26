@@ -6,8 +6,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 import server.auth.Authenticator;
+import server.model.Player;
 import server.packets.PacketParser;
 import server.packets.PacketReceiver;
 import server.sql.SQLManager;
@@ -19,6 +21,7 @@ public class Server implements Runnable {
 	private Configuration config;
 	private SQLManager sqlManager;
 	private Authenticator auth;
+	private PlayerList players;
 	
 	private PacketReceiver packetReceiver;
 	private PacketParser packetParser;
@@ -26,9 +29,7 @@ public class Server implements Runnable {
 	private Thread t;
 
 	private DatagramSocket serverSocket;
-	
-	public Server() {/*empty constructor*/}
-	
+		
 	public static void main(String[] args) {
 		new Server().start();
 	}
@@ -40,6 +41,9 @@ public class Server implements Runnable {
 		/*setting up handlers*/
 		sqlManager = new SQLManager(this);
 		auth = new Authenticator(this);
+		
+		/*init player list*/
+		players = new PlayerList(this);
 		
 		/*attempt to open a DatagramSocket*/
 		try {
@@ -120,6 +124,19 @@ public class Server implements Runnable {
 
 	public PacketParser getPacketParser() {
 		return packetParser;
+	}
+
+	public PlayerList getPlayers() {
+		return players;
+	}
+
+	public Player getPlayerByConnection(InetAddress ip, int port) {
+		for (int i = 0; i < players.count(); i++) {
+			if (players.get(i).getIP().toString().equalsIgnoreCase(ip.toString()) && players.get(i).getPort() == port) {
+				return players.get(i);
+			}
+		}
+		return null;
 	}
 
 }
