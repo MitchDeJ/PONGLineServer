@@ -3,13 +3,13 @@ package server.packets;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
-
 import server.Server;
 import server.model.Player;
 import server.packets.types.Packet;
 import server.packets.types.Packet.PacketTypes;
 import server.packets.types.Packet00RegisterStatus;
 import server.packets.types.Packet01LoginStatus;
+import server.packets.types.Packet02Move;
 
 public class PacketParser {
 
@@ -24,6 +24,7 @@ public class PacketParser {
 		String message = new String(data).trim();
 		PacketTypes type = Packet.lookupPacket(message.substring(0, 2));
 		Packet packet;
+		Player player = server.getPlayerByConnection(address, port);;
 		int status;
 		//server.log(message);
 
@@ -69,10 +70,17 @@ public class PacketParser {
 			break;
 			
 		case QUIT:
-			Player quitter = server.getPlayerByConnection(address, port);
-			if (quitter == null)
+			if (player == null)
 				return;
-			server.getPlayers().remove(quitter);
+			server.getPlayers().remove(player);
+			break;
+			
+		case MOVE:
+			if (player == null)
+				return;
+			player.setY(Integer.parseInt(parseIndex(message, 0)));
+			packet = new Packet02Move(player.getY());
+			packet.sendData(server, address, port);
 			break;
 		
 		case INVALID:

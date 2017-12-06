@@ -7,6 +7,7 @@ public class Player {
 	private String name;
 	private InetAddress ip;
 	private int port;
+	private int y = 0;
 	
 	public Player(String name, InetAddress ip, int port) {
 		this.name = name;
@@ -24,6 +25,14 @@ public class Player {
 
 	public int getPort() {
 		return port;
+	}
+
+	public void setY(int y) {
+		this.y = y;
+	}
+
+	public int getY() {
+		return y;
 	}
 
 }

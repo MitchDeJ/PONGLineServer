@@ -7,7 +7,7 @@ import server.Server;
 public abstract class Packet {
 
 	public static enum PacketTypes {
-		INVALID(-1), REGISTER(00), LOGIN(01), QUIT(02);
+		INVALID(-1), REGISTER(00), LOGIN(01), QUIT(02), MOVE(03);
 		
 		private int packetId;
 		
